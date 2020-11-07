@@ -1,7 +1,7 @@
 import requests
-import json
 
 from requests.exceptions import RequestException
+
 
 HEADERS = {'user-agent': 'okhttp/3.12.1'}
 
@@ -123,7 +123,7 @@ class Episode:
 	def duration(self):
 		return self._data.get('ep_duration')
 
-	def get_link(self):
+	def get_stream_link(self):
 		try:
 			return self._link_data['link']
 		except KeyError:
@@ -141,6 +141,26 @@ class Episode:
 
 		except RequestException:
 			print('Oops! Connection error')
+
+	def get_available_links(self):
+		url = self.get_stream_link() # m3u8 file (contains different quality links)
+		prefix_url = url.split('manifest.m3u8')[0]
+
+		try:
+			res = requests.get(url, headers=HEADERS)
+			ls = res.text.split('\n')
+
+			# parsing resolutions and links
+			resolutions = [ line for line in ls if line.startswith('#') and 'RESOLUTION' in line ]
+			resolutions = [ r.split(',')[-1].replace('RESOLUTION=', '') for r in resolutions ]
+
+
+			links = [ prefix_url+line for line in ls if not line.startswith('#') and line != '' ]
+			return list(zip(resolutions, links))
+
+		except RequestException:
+			print('Oops! Connection error')
+
 
 	@classmethod
 	def factory(cls, episodes_json_data):
