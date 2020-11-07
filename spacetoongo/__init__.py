@@ -1,16 +1,20 @@
+import os
 import requests
 
+from dotenv import load_dotenv
 from requests.exceptions import RequestException
 
+# load envirement variables from .env file.
+load_dotenv()
 
 HEADERS = {'user-agent': 'okhttp/3.12.1'}
 
 PAYLOAD = {
-		'sid': 5234053,
-		'app_version': 95,
-		'session_key': 1602722650,
-		'uuid': 'UUID-aaa085b94a084d025a6e012f5da2dc07_5f8ee6ae90af37.91712457',
-		'udid': 'UDID-Andorid-aaa085b94a084d025a6e012f5da2dc07_5f8ee6ae90afa0.20681458'
+		'sid': os.getenv('sid'),
+		'app_version': os.getenv('app_version'),
+		'session_key': os.getenv('session_key'),
+		'uuid': os.getenv('uuid'),
+		'udid': os.getenv('udid')
 	}
 
 class SpacetoonGo:
