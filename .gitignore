@@ -3,6 +3,7 @@ venv/
 app.py
 res.json
 .env
+files/
 
 dist/
 build/
