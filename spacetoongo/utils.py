@@ -23,7 +23,7 @@ class DownloadManager:
             print('Oops! Connection error')
 
     def get_ts_links(self):
-        return self._ts_links[:5]
+        return self._ts_links
 
     def __enter__(self):
         return self
