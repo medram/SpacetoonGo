@@ -3,12 +3,15 @@ import requests
 
 from functools import reduce
 from dotenv import load_dotenv
-from requests.exceptions import RequestException
 
+from .exceptions import AccountPermissionError
 from . import utils
 
 # load envirement variables from .env file.
 load_dotenv()
+
+__version__ = '0.0.1-alpha'
+
 
 HEADERS = {'user-agent': 'okhttp/3.12.1'}
 
@@ -23,7 +26,6 @@ PAYLOAD = {
 
 class SpacetoonGo:
     def __init__(self):
-        # self._url = ''
         self._headers = HEADERS.copy()
         self._payload = PAYLOAD.copy()
         self._data = {}
@@ -122,7 +124,8 @@ class Episode:
 
     def main_stream_link(self):
         try:
-            return self._link_data['link']
+            if self._link_data['link'] is not None:
+                return self._link_data['link']
         except KeyError:
             pass
 
@@ -133,13 +136,18 @@ class Episode:
         res = requests.post(url, data=payload, headers=HEADERS)
 
         self._link_data = res.json()
-        return self._link_data.get('link')
+        if self._link_data['link'] is not None:
+            return self._link_data['link']
+        else:
+            raise AccountPermissionError
 
     def available_stream_links(self, refresh=False):
         if refresh and self._available_stream_links:
             return self._available_stream_links
-
-        url = self.main_stream_link()  # m3u8 file (contains different quality links)
+        try:
+            url = self.main_stream_link()  # m3u8 file (contains different quality links)
+        except Exception:
+            raise
         prefix_url = url.split('manifest.m3u8')[0]
 
         res = requests.get(url, headers=HEADERS)
@@ -160,20 +168,25 @@ class Episode:
     def high_quality_stream_link(self):
         max_resolution = 0
         high_quality_link = ''
-        for key, value in self.available_stream_links():
-            # list of int (like [1080, 720])
-            tmp = map(int, key.lower().split('x'))
-            tmp = reduce(lambda x, y: x * y, tmp)  # retult of 1080*720
-            if tmp > max_resolution:
-                max_resolution = tmp
-                high_quality_link = value
-        return high_quality_link
+        try:
+            for key, value in self.available_stream_links():
+                # list of int (like [1080, 720])
+                tmp = map(int, key.lower().split('x'))
+                tmp = reduce(lambda x, y: x * y, tmp)  # retult of 1080*720
+                if tmp > max_resolution:
+                    max_resolution = tmp
+                    high_quality_link = value
+            return high_quality_link
+        except Exception:
+            raise
 
     def download(self, dist, link=None):
         # download the max resolution video (high quality)
         if link is None:
-            link = self.high_quality_stream_link()
-
+            try:
+                link = self.high_quality_stream_link()
+            except:
+                raise
         # downloading in parallel & save the video to distination.
         with utils.DownloadManager(link) as dm:
             dm.download_and_save(os.path.abspath(dist))
