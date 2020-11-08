@@ -5,6 +5,8 @@ from functools import reduce
 from dotenv import load_dotenv
 from requests.exceptions import RequestException
 
+from . import utils
+
 # load envirement variables from .env file.
 load_dotenv()
 
@@ -23,10 +25,10 @@ class SpacetoonGo:
     def __init__(self):
         # self._url = ''
         self._headers = HEADERS.copy()
+        self._payload = PAYLOAD.copy()
         self._data = {}
         self._all_series_data = []
         self._all_series = []
-        self._payload = PAYLOAD.copy()
 
     def get_all_series(self, refresh=False):
         url = 'https://spacetoongo.com/API/Mob/v3/ContentInfo/get_all_tv_series'
@@ -36,13 +38,11 @@ class SpacetoonGo:
             return self._all_series
 
         # trying to get new series from Spacetoon servers.
-        try:
-            res = requests.post(url, data=self._payload, headers=self._headers)
-            self._all_series_data = res.json()
-            # print(json.dumps(res.json(), indent=2, sort_keys=True))
-            return Serie.factory(self._all_series_data)
-        except RequestException:
-            print('Oops! Connection error')
+        res = requests.post(url, data=self._payload, headers=self._headers)
+
+        self._all_series_data = res.json()
+        # print(json.dumps(res.json(), indent=2, sort_keys=True))
+        return Serie.factory(self._all_series_data)
 
     def check_account(self):
         pass
@@ -80,16 +80,12 @@ class Serie:
         url = 'https://spacetoongo.com/API/Mob/v3/ContentInfo/get_episodes_by_tv_series'
         payload = PAYLOAD.copy()
 
-        try:
-            payload.update({'series_id': self.id})
-            res = requests.post(url, data=payload, headers=HEADERS)
+        payload.update({'series_id': self.id})
+        res = requests.post(url, data=payload, headers=HEADERS)
 
-            self._ep_data = res.json()
-            self._ep = Episode.factory(self._ep_data.get('episodes', []))
-            return self._ep
-
-        except RequestException:
-            print('Oops! Connection error')
+        self._ep_data = res.json()
+        self._ep = Episode.factory(self._ep_data.get('episodes', []))
+        return self._ep
 
     @classmethod
     def factory(cls, series_json_date):
@@ -133,15 +129,11 @@ class Episode:
         url = 'https://spacetoongo.com/API/Mob/v3/ContentInfo/get_episode_link'
         payload = PAYLOAD.copy()
 
-        try:
-            payload.update({'epid': self.id})
-            res = requests.post(url, data=payload, headers=HEADERS)
+        payload.update({'epid': self.id})
+        res = requests.post(url, data=payload, headers=HEADERS)
 
-            self._link_data = res.json()
-            return self._link_data.get('link')
-
-        except RequestException:
-            print('Oops! Connection error')
+        self._link_data = res.json()
+        return self._link_data.get('link')
 
     def available_stream_links(self, refresh=False):
         if refresh and self._available_stream_links:
@@ -150,24 +142,20 @@ class Episode:
         url = self.main_stream_link()  # m3u8 file (contains different quality links)
         prefix_url = url.split('manifest.m3u8')[0]
 
-        try:
-            res = requests.get(url, headers=HEADERS)
-            ls = res.text.split('\n')
+        res = requests.get(url, headers=HEADERS)
+        ls = res.text.split('\n')
 
-            # parsing resolutions and links
-            resolutions = [line for line in ls if line.startswith(
-                '#') and 'RESOLUTION' in line]
-            resolutions = [r.split(',')[-1].replace('RESOLUTION=', '')
-                           for r in resolutions]
+        # parsing resolutions and links
+        resolutions = [line for line in ls if line.startswith(
+            '#') and 'RESOLUTION' in line]
+        resolutions = [r.split(',')[-1].replace('RESOLUTION=', '')
+                       for r in resolutions]
 
-            links = [
-                prefix_url + line for line in ls if not line.startswith('#') and line != '']
-            self._available_stream_links = list(zip(resolutions, links))
+        links = [
+            prefix_url + line for line in ls if not line.startswith('#') and line != '']
+        self._available_stream_links = list(zip(resolutions, links))
 
-            return self._available_stream_links
-
-        except RequestException:
-            print('Oops! Connection error')
+        return self._available_stream_links
 
     def high_quality_stream_link(self):
         max_resolution = 0
@@ -181,14 +169,14 @@ class Episode:
                 high_quality_link = value
         return high_quality_link
 
-    def download(self, dist, url=None):
+    def download(self, dist, link=None):
         # download the max resolution video (high quality)
-        if url is None:
-            url = self.high_quality_stream_link()
+        if link is None:
+            link = self.high_quality_stream_link()
 
-        # downloading in parallel.
-
-        # save the video to distination.
+        # downloading in parallel & save the video to distination.
+        with utils.DownloadManager(link) as dm:
+            dm.download_and_save(os.path.abspath(dist))
 
     @classmethod
     def factory(cls, episodes_json_data):

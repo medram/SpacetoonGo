@@ -1,6 +1,6 @@
 venv/
 **__pycache__**
-app.py
+test.py
 res.json
 .env
 files/

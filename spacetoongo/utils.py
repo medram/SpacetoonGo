@@ -23,7 +23,7 @@ class DownloadManager:
             print('Oops! Connection error')
 
     def get_ts_links(self):
-        return self._ts_links[:5]
+        return self._ts_links
 
     def __enter__(self):
         return self
@@ -41,8 +41,8 @@ class DownloadManager:
 
         if not os.path.isdir(os.path.dirname(dist)):
             raise NotADirectoryError(f"'{dist}' is not a directory")
-        if os.path.isfile(dist):
-            raise FileExistsError(f"'{dist}' is a file, and it's shouldn't be")
+        # if os.path.isfile(dist):
+        #     raise FileExistsError(f"'{dist}' is a file, and it's shouldn't be")
 
         if buffer_size is None:
             buffer_size = self._buffer_size
@@ -95,16 +95,19 @@ class DownloadManager:
                         chunk = f.read(buffer_size)
 
     @staticmethod
-    def download(url, save_to=None, chunk_size=128):
-        print(f'[Downloding] ...{url}')
+    def download(url, save_to=None, buffer_size=None):
+        print(f'[Downloding]...{url}')
         if save_to is None:
             save_to = tempfile.mkstemp()[1]
+
+        if buffer_size is None:
+            buffer_size = self._buffer_size
 
         while True:
             try:
                 res = requests.get(url, stream=True)
                 with open(save_to, 'wb') as f:
-                    for chunk in res.iter_content(chunk_size=chunk_size):
+                    for chunk in res.iter_content(chunk_size=buffer_size):
                         f.write(chunk)
                 return save_to
             except requests.exceptions.RequestException:
