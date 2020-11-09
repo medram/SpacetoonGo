@@ -54,8 +54,9 @@ class SpacetoonGo:
         return len(self.get_all_series())
 
     def get_serie(self, serie_id):
+        serie_id = int(serie_id)
         for serie in self.get_all_series():
-            if serie.id == int(serie_id):
+            if serie.id == serie_id:
                 return serie
 
     def get_favorite_series(self):
