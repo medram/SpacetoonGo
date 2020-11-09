@@ -1,4 +1,8 @@
-class AccountException(Exception):
+class SpacetoonGoException(Exception):
+    pass
+
+
+class AccountException(SpacetoonGoException):
     pass
 
 
@@ -12,3 +16,7 @@ class AccountPermissionError(AccountException):
 
         self.message = msg
         super().__init__(self.message)
+
+
+class EpisodeNotFound(SpacetoonGoException):
+    pass
