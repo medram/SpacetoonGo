@@ -1,16 +1,19 @@
 import os
 import tempfile
 import requests
+
+from tqdm import tqdm
 from concurrent import futures
 
 
 class DownloadManager:
-    def __init__(self, url, buffer_size=1024):
+    def __init__(self, url, buffer_size=1024, verbose=False):
         self._url = url
         self._prefix_url = self._url.split('.smil/')[0] + '.smil/'
         self._ts_links = self.parse_ts_links()
         self._junk_files = []
         self._buffer_size = buffer_size  # in bytes
+        self._verbose = verbose
 
     def parse_ts_links(self):
         try:
@@ -29,7 +32,7 @@ class DownloadManager:
         return self
 
     def __exit__(self, *args, **kwargs):
-        print('clean up junk')
+        # print('clean up junk')
         for junk in self._junk_files:
             try:
                 os.remove(junk)
@@ -55,11 +58,7 @@ class DownloadManager:
         self._junk_files.extend(chunk_paths)
 
     def _download_ts_files(self, tempdir, buffer_size=None):
-        print(f'Downloading ({len(self.get_ts_links())}) ts files')
-        """Downloading ts files in parallel"""
-        # with futures.ThreadPoolExecutor() as executor:
-        #     for link, save_to in zip(links, executor.map(self.download, self.get_ts_links())):
-        #         pass
+        # print(f'Downloading ({len(self.get_ts_links())}) ts files')
 
         if buffer_size is None:
             buffer_size = self._buffer_size
@@ -69,34 +68,48 @@ class DownloadManager:
             futures_list = {executor.submit(
                 self.download, link, tempfile.mkstemp(dir=tempdir.name)[1], buffer_size): link for link in self.get_ts_links()}
 
-            for future in futures.as_completed(futures_list):
-                try:
-                    link = futures_list[future]
-                    # returns path of downloaded chunk.
-                    chunk_paths.update({link: future.result()})
-                except Exception as e:
-                    print(e)
-            print('[Downloaded Successfully]')
+            with tqdm(total=len(futures_list), desc='Downloading...', ascii=True, leave=False,
+                      dynamic_ncols=True,
+                      disable=not self._verbose,
+                      bar_format="{desc}({percentage:6.02f}%): [{bar}] remaining: {remaining} "
+                      ) as pbar:
+
+                for future in futures.as_completed(futures_list):
+                    try:
+                        link = futures_list[future]
+                        # returns path of downloaded chunk.
+                        chunk_paths.update({link: future.result()})
+                        pbar.update(1)
+                    except Exception as e:
+                        print(e)
+
             # sorting chunks in correct order
         return [chunk_paths[l] for l in self.get_ts_links()]
 
     def _merge_ts_files(self, dist, chunk_paths, buffer_size=None):
-        print('Merging ts files')
+        # print('Merging ts files')
         if buffer_size is None:
             buffer_size = self._buffer_size
 
-        with open(dist, 'wb') as video:
-            for file in chunk_paths:
-                print(f'[Coping] ...', file)
-                with open(file, 'rb') as f:
-                    chunk = f.read(buffer_size)
-                    while chunk:
-                        video.write(chunk)
+        with tqdm(total=len(chunk_paths), desc='Coping...', ascii=True, leave=False,
+                  dynamic_ncols=True,
+                  unit='chunk',
+                  disable=not self._verbose,
+                  bar_format="{desc}({percentage:6.02f}%): [{bar}] remaining: {remaining} "
+                  ) as pbar:
+
+            with open(dist, 'wb') as video:
+                for file in chunk_paths:
+                    with open(file, 'rb') as f:
                         chunk = f.read(buffer_size)
+                        while chunk:
+                            video.write(chunk)
+                            chunk = f.read(buffer_size)
+                    pbar.update(1)
 
     @staticmethod
     def download(url, save_to=None, buffer_size=None):
-        print(f'[Downloding]...{url}')
+        # print(f'[Downloding]...{url}')
         if save_to is None:
             save_to = tempfile.mkstemp()[1]
 
