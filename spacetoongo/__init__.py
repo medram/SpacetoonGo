@@ -2,15 +2,12 @@ import os
 import requests
 
 from functools import reduce
-from dotenv import load_dotenv
 
 from .exceptions import AccountPermissionError, EpisodeNotFound
 from . import utils
 
-# load envirement variables from .env file.
-load_dotenv()
 
-__version__ = '0.0.2-alpha.3'
+__version__ = '0.0.2-alpha.4'
 
 
 HEADERS = {'user-agent': 'okhttp/3.12.1'}
@@ -184,7 +181,8 @@ class Episode:
         if not refresh and self._available_stream_links:
             return self._available_stream_links
         try:
-            url = self.main_stream_link(refresh=refresh)  # m3u8 file (contains different quality links)
+            # m3u8 file (contains different quality links)
+            url = self.main_stream_link(refresh=refresh)
         except Exception:
             raise
         prefix_url = url.split('manifest.m3u8')[0]
