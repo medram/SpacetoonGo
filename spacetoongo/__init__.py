@@ -161,9 +161,9 @@ class Episode:
     def duration(self):
         return self._data.get('ep_duration')
 
-    def main_stream_link(self):
+    def main_stream_link(self, refresh=False):
         try:
-            if self._link_data['link'] is not None:
+            if not refresh and self._link_data['link'] is not None:
                 return self._link_data['link']
         except KeyError:
             pass
@@ -184,7 +184,7 @@ class Episode:
         if not refresh and self._available_stream_links:
             return self._available_stream_links
         try:
-            url = self.main_stream_link()  # m3u8 file (contains different quality links)
+            url = self.main_stream_link(refresh=refresh)  # m3u8 file (contains different quality links)
         except Exception:
             raise
         prefix_url = url.split('manifest.m3u8')[0]
@@ -204,11 +204,11 @@ class Episode:
 
         return self._available_stream_links
 
-    def high_quality_stream_link(self):
+    def high_quality_stream_link(self, refresh=False):
         max_resolution = 0
         high_quality_link = ''
         try:
-            for key, value in self.available_stream_links():
+            for key, value in self.available_stream_links(refresh=refresh):
                 # list of int (like [1080, 720])
                 tmp = map(int, key.lower().split('x'))
                 tmp = reduce(lambda x, y: x * y, tmp)  # retult of 1080*720

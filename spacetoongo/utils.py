@@ -91,7 +91,8 @@ class DownloadManager:
         if buffer_size is None:
             buffer_size = self._buffer_size
 
-        with tqdm(total=len(chunk_paths), desc='Coping...', ascii=True, leave=False,
+        with tqdm(total=len(chunk_paths), desc='Coping...', ascii=True,
+                  # leave=False,
                   dynamic_ncols=True,
                   unit='chunk',
                   disable=not self._verbose,
