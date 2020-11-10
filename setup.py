@@ -5,6 +5,11 @@ from spacetoongo import __version__
 with open('README.md') as f:
     long_description = f.read()
 
+# parsing a requirements.txt file.
+with open('requirements.txt') as r:
+    requirements = [line.strip() for line in r.readlines()]
+
+
 setuptools.setup(
     name='spacetoongo',
     version=__version__,
@@ -14,6 +19,7 @@ setuptools.setup(
     author='Mohammed ER-Ramouchy',
     author_email='mohammed@ramouchy.com',
     url='https://github.com/medram/SpacetoonGo',
+    license='MIT',
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
@@ -24,5 +30,6 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     packages=setuptools.find_packages(),
+    install_requires=requirements,
     keywords='spacetoon, spacetoon go, spacetoon api',
 )

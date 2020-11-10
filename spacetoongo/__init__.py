@@ -10,7 +10,7 @@ from . import utils
 # load envirement variables from .env file.
 load_dotenv()
 
-__version__ = '0.0.2-alpha'
+__version__ = '0.0.2-alpha.3'
 
 
 HEADERS = {'user-agent': 'okhttp/3.12.1'}
