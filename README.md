@@ -6,20 +6,20 @@ Install SpacetoonGo API from PyPi using terminal:
 ```Shell
 $ pip install spacetoongo
 ```
-Then set these envirement variables in your terminal or in your .env file:
+Then setup these envirement variables in your terminal or put them in your .env file then load them using 'dotenv' package :
 ```Shell
-SPACETOONGO_USER_ID =           # Your SpacetoonGo account id (required)
-SPACETOONGO_APP_VERSION = 95    # SpacetoonGo app version, the API is tested on v95 (required)
-SPACETOONGO_SESSION_KEY =       # Your SpacetoonGo account session (optional)
-SPACETOONGO_UUID =              # UUID of your phone (optional)
-SPACETOONGO_UDID =              # UDID of your phone (optional)
+SPACETOONGO_USER_ID=           # Your SpacetoonGo account id (required)
+SPACETOONGO_APP_VERSION=95     # SpacetoonGo app version, the API is tested on v95 (required)
+SPACETOONGO_SESSION_KEY=       # Your SpacetoonGo account session (optional)
+SPACETOONGO_UUID=              # UUID of your phone (optional)
+SPACETOONGO_UDID=              # UDID of your phone (optional)
 ```
 The variable SPACETOONGO_USER_ID is very importent to be set.
 
 ## Notes:
 - This API has the same permissions/privileges as your SpacetoonGo account has.
 - You need a Premium SpacetoonGo account to be able to download tv-series & episodes.
-
+- Make sure to connect from an Arabic country to get access to all SpacetoonGo tv-series.
 
 # A simple docs:
 ```Python
