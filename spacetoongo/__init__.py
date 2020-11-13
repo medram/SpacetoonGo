@@ -98,6 +98,10 @@ class Serie:
         """
         return int(self._data.get('ep_count'))
 
+    @property
+    def is_movie(self):
+        return bool(int(self._data['is_movie']))
+
     def get_episodes(self, refresh=False):
         if not refresh and self._ep:
             return self._ep
