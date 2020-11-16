@@ -1,2 +1,2 @@
-requests==2.23.0
-tqdm==4.51.0
+requests>=2.23.0,<3
+tqdm>=4.51.0,<5

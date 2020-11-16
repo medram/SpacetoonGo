@@ -7,7 +7,7 @@ from .exceptions import AccountPermissionError, EpisodeNotFound
 from . import utils
 
 
-__version__ = '0.0.2-alpha.5'
+__version__ = '0.0.2-alpha.7'
 
 
 HEADERS = {'user-agent': 'okhttp/3.12.1'}
